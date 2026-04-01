@@ -1,0 +1,184 @@
+kind: DataContract
+apiVersion: v3.0.0
+id: week5-ledger-events
+info:
+  title: Contract for week5-ledger-events
+  version: 1.0.0
+  owner: week7-team
+  description: >
+    Auto-generated contract from events.jsonl. Generated at 2026-04-01T10:30:00+00:00.
+    Covers 9 schema fields with 9 required.
+    Source system: The-Ledger EventStore.append() — PostgreSQL-backed append-only event store
+    covering the full loan application lifecycle (ApplicationSubmitted through HumanReviewCompleted).
+    Records conform to StoredEvent Pydantic model from src/models/events.py.
+servers:
+  local:
+    type: local
+    path: outputs/week5/events.jsonl
+    format: jsonl
+terms:
+  usage: Internal inter-system data contract. Do not publish externally.
+  limitations: >
+    event_type enum must remain stable — consumers build state machines on these values.
+    stream_position must monotonically increase per stream_id — OCC relies on this.
+    global_position must be globally monotonic — replay and gas-town recovery depend on it.
+    event_version increment requires a registered upcaster in UpcasterRegistry.
+    Breaking changes require a new contract version and migration plan.
+schema:
+  event_id:
+    type: string
+    required: true
+    format: uuid
+    pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    description: >
+      Immutable UUID assigned at event append time. Primary key for the event store.
+      Uniqueness is enforced by PostgreSQL; violations indicate event store corruption.
+  stream_id:
+    type: string
+    required: true
+    description: >
+      Aggregate stream identifier in format '<aggregate_type>-<uuid>'.
+      Examples: 'loan-app-<uuid>', 'agent-session-<uuid>'.
+      All events in a stream share the same business aggregate identity.
+      BREAKING if format changes — downstream projections parse this field.
+  stream_position:
+    type: integer
+    required: true
+    minimum: 1
+    description: >
+      Monotonically increasing position within the stream, starting from 1.
+      Optimistic Concurrency Control (OCC) uses expected_version == stream_position - 1.
+      BREAKING if reset to 0 or becomes non-monotonic — this would corrupt all concurrent
+      writers' expected_version checks.
+  global_position:
+    type: integer
+    required: true
+    minimum: 1
+    description: >
+      Global append order across all streams, assigned by the PostgreSQL sequence.
+      Monotonically non-decreasing. Gas-town recovery replays from a saved global_position.
+      BREAKING if non-monotonic — replay would produce wrong aggregate state.
+  event_type:
+    type: string
+    required: true
+    enum:
+      - ApplicationSubmitted
+      - CreditAnalysisRequested
+      - CreditAnalysisCompleted
+      - FraudScreeningRequested
+      - FraudScreeningCompleted
+      - ComplianceCheckRequested
+      - ComplianceRulePassed
+      - ComplianceRuleFailed
+      - DecisionGenerated
+      - HumanReviewRequested
+      - HumanReviewCompleted
+      - ApplicationApproved
+      - ApplicationDeclined
+      - AgentSessionStarted
+      - AgentSessionCompleted
+      - AgentSessionFailed
+      - AgentNodeExecuted
+      - AgentInputValidated
+      - AgentToolCalled
+      - AuditIntegrityCheckRun
+    description: >
+      Domain event type. Stable enum — each value maps to a Pydantic class in EVENT_REGISTRY.
+      BREAKING to rename or remove — aggregate state machines transition on these strings.
+      Adding a new value is non-breaking only if existing projections handle unknown types gracefully.
+  event_version:
+    type: integer
+    required: true
+    minimum: 1
+    maximum: 3
+    description: >
+      Schema version for upcasting. Starts at 1; max=3 reflects current UpcasterRegistry.
+      CreditAnalysisCompleted v2 and DecisionGenerated v2 are the only currently versioned events.
+      Incrementing requires a registered upcaster — otherwise old readers will break.
+      BREAKING if event_version decrements or skips a version.
+  schema_version:
+    type: string
+    required: true
+    enum:
+      - '1.0'
+    description: >
+      Top-level schema version of the JSONL export format (distinct from event_version).
+      Currently always '1.0'. Changes require a new contract version.
+  occurred_at:
+    type: string
+    required: true
+    format: date-time
+    description: >
+      ISO 8601 UTC timestamp when the domain event occurred in business time.
+      Must be <= recorded_at. Violation indicates a clock skew issue or data ingestion error.
+  recorded_at:
+    type: string
+    required: true
+    format: date-time
+    description: >
+      ISO 8601 UTC timestamp when the event was persisted to the PostgreSQL event store.
+      Must be >= occurred_at. The difference (recorded_at - occurred_at) is the event
+      latency; values > 60s indicate a processing bottleneck.
+llm_annotations:
+  stream_id:
+    description: >
+      Aggregate stream identifier. Format '<aggregate_type>-<uuid>' encodes both
+      the aggregate type (for router dispatch) and the aggregate instance identity.
+    business_rule: >
+      stream_id must contain a '-' separator and the second segment must be a valid UUID.
+      Pattern: '^(loan-app|agent-session|compliance-record|audit-ledger)-[0-9a-f]{8}-...$'
+    relationships: >
+      All events with the same stream_id belong to the same aggregate instance.
+      stream_position within a stream_id must be monotonically increasing.
+  schema_version:
+    description: >
+      JSONL export format version, separate from event_version. Controls how the outer
+      envelope (event_id, stream_id, stream_position, etc.) is interpreted.
+    business_rule: >
+      schema_version must be '1.0' until a new contract version is published.
+      schema_version change without a contract version bump is a silent breaking change.
+    relationships: >
+      Distinct from event_version. schema_version governs the outer wrapper;
+      event_version governs the payload field contents.
+quality:
+  type: SodaChecks
+  specification:
+    checks:
+      - row_count >= 1
+      - missing_count(event_id) = 0
+      - duplicate_count(event_id) = 0
+      - min(stream_position) >= 1
+      - min(global_position) >= 1
+      - min(event_version) >= 1
+      - max(event_version) <= 3
+      - missing_count(event_type) = 0
+      - missing_count(recorded_at) = 0
+lineage:
+  upstream:
+    - id: file::The-Ledger/src/event_store.py
+      description: EventStore.append() — writes StoredEvent records to PostgreSQL then exports to JSONL
+  downstream:
+    - id: pipeline::week5-ledger-events
+      description: Downstream consumer via CONSUMES edge
+      fields_consumed:
+        - event_id
+        - stream_id
+        - event_type
+        - stream_position
+        - payload
+      breaking_if_changed:
+        - event_type
+        - stream_position
+        - event_version
+    - id: service::validation-runner
+      description: Downstream consumer via CONSUMES edge
+      fields_consumed:
+        - event_id
+        - stream_id
+        - event_type
+        - stream_position
+        - payload
+      breaking_if_changed:
+        - event_type
+        - stream_position
+        - event_version

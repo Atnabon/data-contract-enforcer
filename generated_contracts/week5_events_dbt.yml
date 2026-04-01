@@ -1,0 +1,100 @@
+version: 2
+models:
+  - name: week5_ledger_events
+    description: >
+      dbt schema tests for week5-ledger-events.
+      Translates Bitol contract clauses into dbt-native test assertions.
+      Source: The-Ledger EventStore — PostgreSQL-backed append-only event log.
+    columns:
+      - name: event_id
+        description: Immutable UUID. Primary key for the event store.
+        tests:
+          - not_null
+          - unique
+          - dbt_utils.expression_is_true:
+              expression: "event_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'"
+
+      - name: stream_id
+        description: Aggregate stream identifier in format '<aggregate_type>-<uuid>'.
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "stream_id LIKE '%-%'"
+
+      - name: stream_position
+        description: Monotonically increasing position within the stream, starting from 1.
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 1"
+
+      - name: global_position
+        description: Global append order. Monotonically non-decreasing.
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 1"
+
+      - name: event_type
+        description: Domain event type. Stable enum from EVENT_REGISTRY.
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - ApplicationSubmitted
+                - CreditAnalysisRequested
+                - CreditAnalysisCompleted
+                - FraudScreeningRequested
+                - FraudScreeningCompleted
+                - ComplianceCheckRequested
+                - ComplianceRulePassed
+                - ComplianceRuleFailed
+                - DecisionGenerated
+                - HumanReviewRequested
+                - HumanReviewCompleted
+                - ApplicationApproved
+                - ApplicationDeclined
+                - AgentSessionStarted
+                - AgentSessionCompleted
+                - AgentSessionFailed
+                - AgentNodeExecuted
+                - AgentInputValidated
+                - AgentToolCalled
+                - AuditIntegrityCheckRun
+
+      - name: event_version
+        description: Schema version for upcasting. Range 1-3.
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 1"
+          - dbt_utils.expression_is_true:
+              expression: "<= 3"
+          - accepted_values:
+              values:
+                - 1
+                - 2
+                - 3
+
+      - name: schema_version
+        description: JSONL export format version. Currently always '1.0'.
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - '1.0'
+
+      - name: occurred_at
+        description: ISO 8601 UTC timestamp of business event occurrence.
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              name: occurred_before_recorded
+              expression: "occurred_at::timestamptz <= recorded_at::timestamptz"
+
+      - name: recorded_at
+        description: ISO 8601 UTC timestamp of event store persistence.
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "recorded_at IS NOT NULL AND recorded_at::timestamptz <= NOW()"
