@@ -1,0 +1,9 @@
+cat > .gitignore << 'EOF'
+.env
+.env.example
+__pycache__/
+*.pyc
+.DS_Store
+schema_snapshots/embedding_baselines.npz
+.venv/
+EOF
