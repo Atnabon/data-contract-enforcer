@@ -1,0 +1,69 @@
+{
+  "report_id": "enforcer-20260404-130246",
+  "generated_at": "2026-04-04T13:02:46.695205+00:00",
+  "period": "2026-03-28 to 2026-04-04",
+  "data_health_score": 46.4,
+  "health_score_formula": "(checks_passed / total_checks) * 100, minus 20 per CRITICAL violation",
+  "health_narrative": "Score 46.4/100. 1 critical issue(s) require immediate action. Data pipeline should not proceed to production without resolution.",
+  "total_checks_run": 193,
+  "total_checks_passed": 186,
+  "total_checks_failed": 7,
+  "violations_by_severity": {
+    "CRITICAL": 1,
+    "HIGH": 6,
+    "MEDIUM": 0,
+    "LOW": 0,
+    "WARNING": 0
+  },
+  "top_violations": [
+    "[CRITICAL] The 'evidence_confidence' field failed its maximum check. Expected: <= 1.0. Found: max observed = 98.0000. Column 'evidence_confidence' has 10 values above maximum 1.0. Downstream subscribers affected: no registered subscribers. Records failing: 10.",
+    "[HIGH] The 'dimension_id' field failed its format_uuid check. Expected: all values match ^[0-9a-f]{{8}}-...$. Found: 10 invalid UUIDs. Column 'dimension_id' contains 10 non-UUID values. Downstream subscribers affected: no registered subscribers. Records failing: 10.",
+    "[HIGH] The 'evidence_confidence' field failed its maximum check. Expected: <= 1.0. Found: max observed = 98.0000. Column 'evidence_confidence' has 10 values above maximum 1.0. Downstream subscribers affected: no registered subscribers. Records failing: 10."
+  ],
+  "schema_changes": "Overall verdict: BREAKING. 1 change(s) detected, 1 breaking.   - evidence_confidence: narrow_type (BREAKING)",
+  "ai_risk_assessment": {
+    "embedding_drift": {
+      "status": "PASS",
+      "drift_score": 0.0,
+      "threshold": 0.15,
+      "interpretation": "Embedding drift within acceptable bounds \u2014 content is stable."
+    },
+    "prompt_input_validation": {
+      "status": "PASS",
+      "valid": 10,
+      "quarantined": 0
+    },
+    "output_violation_rate": {
+      "status": "PASS",
+      "violation_rate": 0.0,
+      "trend": "unknown"
+    },
+    "overall_assessment": "All AI systems are currently consuming reliable data. Embedding drift is within acceptable bounds. LLM output schema violation rate is stable. Prompt inputs pass schema validation."
+  },
+  "recommended_actions": [
+    {
+      "priority": 1,
+      "action": "Update the upstream producer to output 'evidence_confidence' as float 0.0-1.0 per contract clause evidence_confidence.range. File: contracts/generator.py \u2014 clause 'evidence_confidence' with minimum: 0.0, maximum: 1.0. The current data shows values in 0-100 scale, indicating a scale change.",
+      "severity": "CRITICAL",
+      "field": "evidence_confidence",
+      "file_reference": "contracts/generator.py",
+      "clause_reference": "evidence_confidence.range (minimum: 0.0, maximum: 1.0)"
+    },
+    {
+      "priority": 2,
+      "action": "Add contracts/runner.py as a required CI step before any deployment. Run in AUDIT mode for the first 2 weeks, then switch to ENFORCE mode. File: .github/workflows/contract-validation.yml",
+      "severity": "HIGH",
+      "field": "__pipeline__",
+      "file_reference": "contracts/runner.py"
+    },
+    {
+      "priority": 3,
+      "action": "Schedule monthly baseline refresh for statistical drift thresholds in schema_snapshots/baselines.json. Current baselines may become stale as data distributions evolve. File: schema_snapshots/baselines.json",
+      "severity": "MEDIUM",
+      "field": "__baselines__",
+      "file_reference": "schema_snapshots/baselines.json"
+    }
+  ],
+  "validation_reports_analyzed": 5,
+  "violation_log_entries": 3
+}

@@ -1,0 +1,154 @@
+kind: DataContract
+apiVersion: v3.0.0
+id: week3-automaton-auditor-verdicts
+info:
+  title: Contract for week3-automaton-auditor-verdicts
+  version: 1.0.0
+  owner: week7-team
+  description: Auto-generated contract from verdicts.jsonl. Generated at 2026-04-04T12:46:07.429522+00:00.
+    Covers 12 schema fields with 11 required.
+servers:
+  local:
+    type: local
+    path: outputs/week3/verdicts.jsonl
+    format: jsonl
+terms:
+  usage: Internal inter-system data contract. Do not publish externally.
+  limitations: Score fields must remain on 1-5 integer scale. Confidence fields must
+    remain on 0.0-1.0 float scale. Breaking changes require a new contract version
+    and migration plan.
+schema:
+  audit_id:
+    type: string
+    required: true
+    format: uuid
+    pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+  target_repo:
+    type: string
+    required: true
+  dimension_id:
+    type: string
+    required: true
+    format: uuid
+    pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+  final_score:
+    type: integer
+    required: true
+    minimum: 1
+    maximum: 5
+    description: Judicial score (1=Vibe Coder, 5=Master Thinker). BREAKING if scale
+      changes from 1-5.
+  prosecutor_score:
+    type: integer
+    required: true
+    minimum: 1
+    maximum: 5
+    description: Judicial score (1=Vibe Coder, 5=Master Thinker). BREAKING if scale
+      changes from 1-5.
+  defense_score:
+    type: integer
+    required: true
+    minimum: 1
+    maximum: 5
+    description: Judicial score (1=Vibe Coder, 5=Master Thinker). BREAKING if scale
+      changes from 1-5.
+  tech_lead_score:
+    type: integer
+    required: true
+    minimum: 1
+    maximum: 5
+    description: Judicial score (1=Vibe Coder, 5=Master Thinker). BREAKING if scale
+      changes from 1-5.
+  reasoning:
+    type: string
+    required: true
+    description: Chief Justice synthesis chain explaining how each deterministic rule
+      was applied.
+  dissent_summary:
+    type: string
+    required: false
+    description: Present only when judicial score variance exceeds 2. Null otherwise.
+  evidence_confidence:
+    type: number
+    required: true
+    minimum: 0.0
+    maximum: 1.0
+    description: Confidence score from automaton-auditor detective evidence. Must
+      remain 0.0-1.0 float. BREAKING if changed to 0-100 integer scale.
+  evidence_found:
+    type: boolean
+    required: true
+  audited_at:
+    type: string
+    required: true
+    format: date-time
+llm_annotations:
+  reasoning:
+    description: Chief Justice synthesis chain explaining how each deterministic rule
+      was applied.
+    business_rule: len(reasoning) > 0; must not be empty string.
+    relationships: Derived from prosecutor_score, defense_score, tech_lead_score via
+      synthesis rules.
+  dissent_summary:
+    description: Present only when judicial score variance exceeds 2. Null otherwise.
+    business_rule: IF max(scores) - min(scores) > 2 THEN dissent_summary IS NOT NULL.
+    relationships: Cross-field constraint with final_score, prosecutor_score, defense_score,
+      tech_lead_score.
+quality:
+  type: SodaChecks
+  specification:
+    checks:
+    - row_count >= 1
+    - missing_count(audit_id) = 0
+    - duplicate_count(audit_id) = 0
+    - min(final_score) >= 1
+    - max(final_score) <= 5
+lineage:
+  upstream:
+  - id: file::automaton-auditor/src/nodes/justice.py
+    description: Chief Justice synthesis node that writes CriterionVerdict records
+  downstream:
+  - id: pipeline::week3-automaton-auditor-verdicts
+    description: Downstream consumer via PRODUCES edge
+    fields_consumed:
+    - audit_id
+    - dimension_id
+    - final_score
+    - evidence_confidence
+    breaking_if_changed:
+    - final_score
+    - evidence_confidence
+    - dimension_id
+  - id: file::Legacy-Code-Cartographer/src/agents/hydrologist.py
+    description: Downstream consumer via CONSUMES edge
+    fields_consumed:
+    - audit_id
+    - dimension_id
+    - final_score
+    - evidence_confidence
+    breaking_if_changed:
+    - final_score
+    - evidence_confidence
+    - dimension_id
+  - id: pipeline::week5-ledger-events
+    description: Downstream consumer via CONSUMES edge
+    fields_consumed:
+    - audit_id
+    - dimension_id
+    - final_score
+    - evidence_confidence
+    breaking_if_changed:
+    - final_score
+    - evidence_confidence
+    - dimension_id
+  - id: service::validation-runner
+    description: Downstream consumer via CONSUMES edge
+    fields_consumed:
+    - audit_id
+    - dimension_id
+    - final_score
+    - evidence_confidence
+    breaking_if_changed:
+    - final_score
+    - evidence_confidence
+    - dimension_id

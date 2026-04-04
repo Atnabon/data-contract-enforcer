@@ -1,0 +1,114 @@
+{
+  "written_at": "2026-04-04T13:03:21.069026+00:00",
+  "contract_id": "week5-ledger-events",
+  "columns": {
+    "stream_position": {
+      "mean": 3.8333333333333335,
+      "stddev": 2.28963408483195,
+      "min": 1.0,
+      "max": 8.0
+    },
+    "global_position": {
+      "mean": 6.5,
+      "stddev": 3.605551275463989,
+      "min": 1.0,
+      "max": 12.0
+    },
+    "event_version": {
+      "mean": 1.1666666666666667,
+      "stddev": 0.3892494720807615,
+      "min": 1.0,
+      "max": 2.0
+    },
+    "payload_requested_amount_usd": {
+      "mean": 250000.0,
+      "stddev": NaN,
+      "min": 250000.0,
+      "max": 250000.0
+    },
+    "payload_context_token_count": {
+      "mean": 4200.0,
+      "stddev": NaN,
+      "min": 4200.0,
+      "max": 4200.0
+    },
+    "payload_node_sequence": {
+      "mean": 1.5,
+      "stddev": 0.7071067811865476,
+      "min": 1.0,
+      "max": 2.0
+    },
+    "payload_duration_ms": {
+      "mean": 1080.0,
+      "stddev": 1074.8023074035523,
+      "min": 320.0,
+      "max": 1840.0
+    },
+    "payload_llm_tokens_input": {
+      "mean": 3200.0,
+      "stddev": NaN,
+      "min": 3200.0,
+      "max": 3200.0
+    },
+    "payload_llm_tokens_output": {
+      "mean": 480.0,
+      "stddev": NaN,
+      "min": 480.0,
+      "max": 480.0
+    },
+    "payload_llm_cost_usd": {
+      "mean": 0.0042,
+      "stddev": NaN,
+      "min": 0.0042,
+      "max": 0.0042
+    },
+    "payload_confidence_score": {
+      "mean": 0.855,
+      "stddev": 0.021213203435596444,
+      "min": 0.84,
+      "max": 0.87
+    },
+    "payload_recommended_limit_usd": {
+      "mean": 200000.0,
+      "stddev": NaN,
+      "min": 200000.0,
+      "max": 200000.0
+    },
+    "payload_analysis_duration_ms": {
+      "mean": 2160.0,
+      "stddev": NaN,
+      "min": 2160.0,
+      "max": 2160.0
+    },
+    "payload_total_nodes_executed": {
+      "mean": 2.0,
+      "stddev": NaN,
+      "min": 2.0,
+      "max": 2.0
+    },
+    "payload_total_llm_calls": {
+      "mean": 1.0,
+      "stddev": NaN,
+      "min": 1.0,
+      "max": 1.0
+    },
+    "payload_total_tokens_used": {
+      "mean": 3680.0,
+      "stddev": NaN,
+      "min": 3680.0,
+      "max": 3680.0
+    },
+    "payload_total_cost_usd": {
+      "mean": 0.0042,
+      "stddev": NaN,
+      "min": 0.0042,
+      "max": 0.0042
+    },
+    "payload_fraud_score": {
+      "mean": 0.12,
+      "stddev": NaN,
+      "min": 0.12,
+      "max": 0.12
+    }
+  }
+}
