@@ -1,0 +1,138 @@
+{
+  "report_id": "evo-20260404125905",
+  "contract_id": "week3-automaton-auditor-verdicts",
+  "generated_at": "2026-04-04T12:59:05.828603+00:00",
+  "snapshot_old": "20260404_124607",
+  "snapshot_new": "20260404_125232",
+  "overall_verdict": "BREAKING",
+  "total_changes": 1,
+  "breaking_changes": 1,
+  "compatible_changes": 0,
+  "changes": [
+    {
+      "field": "evidence_confidence",
+      "verdict": "BREAKING",
+      "change_type": "narrow_type",
+      "description": "CRITICAL: Field 'evidence_confidence' narrowed from number to integer. Example: float 0.0-1.0 -> int 0-100 causes data loss and breaks all downstream consumers expecting float precision. This is the most dangerous schema change class.",
+      "old_clause": {
+        "type": "number",
+        "required": true,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "description": "Confidence score from automaton-auditor detective evidence. Must remain 0.0-1.0 float. BREAKING if changed to 0-100 integer scale."
+      },
+      "new_clause": {
+        "type": "integer",
+        "required": true,
+        "minimum": 0,
+        "maximum": 100,
+        "description": "Confidence score. Changed to 0-100 integer scale."
+      }
+    }
+  ],
+  "blast_radius": [
+    {
+      "subscriber_id": "week4-cartographer",
+      "contact": "atnabon@week4-team.org",
+      "affected_fields": [
+        "evidence_confidence"
+      ],
+      "validation_mode": "ENFORCE"
+    },
+    {
+      "subscriber_id": "week5-ledger-event-store",
+      "contact": "atnabon@week5-team.org",
+      "affected_fields": [
+        "evidence_confidence"
+      ],
+      "validation_mode": "WARN"
+    },
+    {
+      "subscriber_id": "week7-contract-enforcer",
+      "contact": "atnabon@week7-team.org",
+      "affected_fields": [
+        "evidence_confidence"
+      ],
+      "validation_mode": "ENFORCE"
+    }
+  ],
+  "migration_checklist": [
+    {
+      "step": 1,
+      "action": "Update consumer code to handle new schema for field 'evidence_confidence'",
+      "field": "evidence_confidence",
+      "change_type": "narrow_type",
+      "description": "CRITICAL: Field 'evidence_confidence' narrowed from number to integer. Example: float 0.0-1.0 -> int 0-100 causes data loss and breaks all downstream consumers expecting float precision. This is the most dangerous schema change class."
+    },
+    {
+      "step": 2,
+      "action": "Run ValidationRunner in AUDIT mode against new schema to verify no regressions",
+      "field": "__all__",
+      "change_type": "verification",
+      "description": "End-to-end validation after migration"
+    },
+    {
+      "step": 3,
+      "action": "Update statistical baselines in schema_snapshots/baselines.json after schema migration",
+      "field": "__baselines__",
+      "change_type": "baseline_refresh",
+      "description": "Baselines must be re-established post-migration to avoid false drift alerts"
+    }
+  ],
+  "rollback_plan": {
+    "procedure": [
+      "Revert to snapshot 20260404_124607 by restoring schema_snapshots/week3-automaton-auditor-verdicts/20260404_124607.yaml",
+      "Re-run ContractGenerator with original data to regenerate contract",
+      "Notify all affected subscribers listed in blast_radius",
+      "Re-establish statistical baselines from pre-migration data"
+    ],
+    "baselines_to_restore": [
+      "schema_snapshots/baselines.json \u2014 numeric column means and stddevs"
+    ],
+    "estimated_impact": "3 subscribers require notification"
+  },
+  "consumer_failure_modes": [
+    {
+      "subscriber_id": "week4-cartographer",
+      "contact": "atnabon@week4-team.org",
+      "failure_mode": "Subscriber 'week4-cartographer' consumes ['evidence_confidence']. Without migration, validation in ENFORCE mode will block pipeline.",
+      "affected_fields": [
+        "evidence_confidence"
+      ]
+    },
+    {
+      "subscriber_id": "week5-ledger-event-store",
+      "contact": "atnabon@week5-team.org",
+      "failure_mode": "Subscriber 'week5-ledger-event-store' consumes ['evidence_confidence']. Without migration, validation in WARN mode will emit warnings.",
+      "affected_fields": [
+        "evidence_confidence"
+      ]
+    },
+    {
+      "subscriber_id": "week7-contract-enforcer",
+      "contact": "atnabon@week7-team.org",
+      "failure_mode": "Subscriber 'week7-contract-enforcer' consumes ['evidence_confidence']. Without migration, validation in ENFORCE mode will block pipeline.",
+      "affected_fields": [
+        "evidence_confidence"
+      ]
+    }
+  ],
+  "taxonomy_reference": {
+    "breaking": [
+      "add_required_field",
+      "remove_field",
+      "rename_field",
+      "narrow_type",
+      "remove_enum_value",
+      "change_type",
+      "narrow_range"
+    ],
+    "compatible": [
+      "add_optional_field",
+      "widen_type",
+      "add_enum_value",
+      "widen_range",
+      "description_change"
+    ]
+  }
+}

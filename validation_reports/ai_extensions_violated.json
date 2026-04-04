@@ -1,0 +1,63 @@
+{
+  "embedding_drift": {
+    "status": "PASS",
+    "drift_score": 0.0,
+    "threshold": 0.15,
+    "sample_size": 10,
+    "baseline_sample_size": 10,
+    "baseline_created_at": "2026-04-04T12:59:32.258076+00:00",
+    "method": "cosine_distance",
+    "interpretation": "Embedding drift within acceptable bounds \u2014 content is stable."
+  },
+  "prompt_input_validation": {
+    "status": "PASS",
+    "valid": 10,
+    "quarantined": 0,
+    "total": 10,
+    "quarantine_path": null,
+    "message": "10 records passed schema validation, 0 quarantined."
+  },
+  "output_violation_rate": {
+    "status": "WARN",
+    "total_outputs": 10,
+    "schema_violations": 10,
+    "violation_rate": 1.0,
+    "trend": "unknown",
+    "baseline_rate": null,
+    "warn_threshold": 0.02,
+    "violation_details": [
+      {
+        "record_index": 0,
+        "issues": [
+          "confidence=93.0 outside 0.0-1.0 range"
+        ]
+      },
+      {
+        "record_index": 1,
+        "issues": [
+          "confidence=97.0 outside 0.0-1.0 range"
+        ]
+      },
+      {
+        "record_index": 2,
+        "issues": [
+          "confidence=95.0 outside 0.0-1.0 range"
+        ]
+      },
+      {
+        "record_index": 3,
+        "issues": [
+          "confidence=88.0 outside 0.0-1.0 range"
+        ]
+      },
+      {
+        "record_index": 4,
+        "issues": [
+          "confidence=96.0 outside 0.0-1.0 range"
+        ]
+      }
+    ],
+    "message": "LLM output schema violation rate: 100.00% (10/10). Trend: unknown."
+  },
+  "run_timestamp": "2026-04-04T13:00:05.259882+00:00"
+}
